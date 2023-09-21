@@ -13,7 +13,7 @@ resource "helm_release" "jenkins" {
   chart = "./charts/jenkins"
 
   values = [
-    file("./charts/jenkins/values.yaml")
+    file("./helm/charts/jenkins/values.yaml")
   ]
 
   set {
