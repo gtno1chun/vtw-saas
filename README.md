@@ -57,6 +57,13 @@ $ minikube start
 $ kubectl get pod -A
 ```
 
+4. minikube addons 설치  
+```
+# minikube addons enalbe [addons name]
+$ minikube addons enalbe metrics-server
+$ minikube addons enalbe ingress 
+```
+
 ## kubectl 설치 및 자동완성 
 참고 사이트 :
 - https://kubernetes.io/docs/tasks/tools/install-kubectl-linux/#install-using-native-package-management
