@@ -13,16 +13,13 @@
 # ref: https://github.com/kubernetes/dns/blob/master/docs/specification.md
 clusterZone: "cluster.local"
 
-# The URL of the Kubernetes API server
-kubernetesURL: "https://kubernetes.default"
-
 renderHelmLabels: true
 
 controller:
   # Used for label app.kubernetes.io/component
   componentName: "jenkins-controller"
   image: "jenkins/jenkins"
-  # tag: "2.414.1-jdk11"
+  # tag: "2.332.3-jdk11"
   tagLabel: jdk11
   imagePullPolicy: "Always"
   imagePullSecretName:
@@ -72,8 +69,6 @@ controller:
     limits:
       cpu: "2000m"
       memory: "4096Mi"
-  # Share process namespace to allow sidecar containers to interact with processes in other containers in the same pod
-  shareProcessNamespace: false
   # Overrides the init container default values
   # initContainerResources:
   #   requests:
@@ -146,7 +141,7 @@ controller:
   #   service.beta.kubernetes.io/aws-load-balancer-backend-protocol: https
   # Put labels on Jenkins controller pod
   podLabels: {}
-  # Used to create Ingress record (should be used with ServiceType: ClusterIP)
+  # Used to create Ingress record (should used with ServiceType: ClusterIP)
   # nodePort: <to set explicitly, choose port between 30000-32767
   # Enable Kubernetes Startup, Liveness and Readiness Probes
   # if Startup Probe is supported, enable it too
@@ -240,14 +235,13 @@ controller:
   extraPorts: []
   # - name: BuildInfoProxy
   #   port: 9000
-  #   targetPort: 9010 (Optional: Use to explicitly set targetPort if different from port)
 
   # List of plugins to be install during Jenkins controller start
   installPlugins:
-    - kubernetes:3937.vd7b_82db_e347b_
-    - workflow-aggregator:596.v8c21c963d92d
-    - git:5.1.0
-    - configuration-as-code:1670.v564dc8b_982d0
+    - kubernetes:3600.v144b_cd192ca_a_
+    - workflow-aggregator:581.v0c46fa_697ffd
+    - git:4.11.3
+    - configuration-as-code:1429.v09b_044a_c93de
 
   # Set to false to download the minimum required version of all dependencies.
   installLatestPlugins: true
@@ -269,9 +263,6 @@ controller:
   # Configures if plugins bundled with `controller.image` should be overwritten with the values of 'controller.installPlugins' on upgrade or redeployment.
   overwritePluginsFromImage: true
 
-  # Configures the restrictions for naming projects. Set this key to null or empty to skip it in the default config.
-  projectNamingStrategy: standard
-
   # Enable HTML parsing using OWASP Markup Formatter Plugin (antisamy-markup-formatter), useful with ghprb plugin.
   # The plugin is not installed by default, please update controller.installPlugins.
   enableRawHtmlMarkupFormatter: false
@@ -290,10 +281,6 @@ controller:
   # an existing secret "secret-credentials" and a key inside it named "github-password" should be used in Jcasc as ${secret-credentials-github-password}
   # 'name' and 'keyName' must be lowercase RFC 1123 label must consist of lower case alphanumeric characters or '-',
   # and must start and end with an alphanumeric character (e.g. 'my-name',  or '123-abc')
-  # existingSecret existing secret "secret-credentials" and a key inside it named "github-username" should be used in Jcasc as ${github-username}
-  # When using existingSecret no need to specify the keyName under additionalExistingSecrets.
-  existingSecret:
-
   additionalExistingSecrets: []
   #  - name: secret-name-1
   #    keyName: username
@@ -327,20 +314,11 @@ controller:
   # etc.  Best reference is https://<jenkins_url>/configuration-as-code/reference.  The example below creates a welcome message:
   JCasC:
     defaultConfig: true
-    configUrls: []
-    # - https://acme.org/jenkins.yaml
-    # Remote URL:s for configuration files.
     configScripts: {}
     #  welcome-message: |
     #    jenkins:
     #      systemMessage: Welcome to our CI\CD server.  This Jenkins is configured and managed 'as code'.
-    # Allows adding to the top-level security JCasC section. For legacy,  default the chart includes apiToken configurations
-    security:
-      apiToken:
-        creationOfLegacyTokenEnabled: false
-        tokenGenerationOnCreationEnabled: false
-        usageStatisticsEnabled: true
-    # Ignored if securityRealm is defined in controller.JCasC.configScripts
+    # Ignored if securityRealm is defined in controller.JCasC.configScripts and
     securityRealm: |-
       local:
         allowsSignup: false
@@ -366,7 +344,7 @@ controller:
       # jcasc changes will cause a reboot and will only be applied at the subsequent start-up.  Auto-reload uses the
       # http://<jenkins_url>/reload-configuration-as-code endpoint to reapply config when changes to the configScripts are detected.
       enabled: true
-      image: kiwigrid/k8s-sidecar:1.24.4
+      image: kiwigrid/k8s-sidecar:1.15.0
       imagePullPolicy: IfNotPresent
       resources: {}
         #   limits:
@@ -546,33 +524,12 @@ controller:
     # Set a custom namespace where to deploy PrometheusRule resource
     prometheusRuleNamespace: ""
 
-    # RelabelConfigs to apply to samples before scraping. Prometheus Operator automatically adds
-    # relabelings for a few standard Kubernetes fields. The original scrape job’s name
-    # is available via the __tmp_prometheus_job_name label.
-    # More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config
-    relabelings: []
-    # MetricRelabelConfigs to apply to samples before ingestion.
-    metricRelabelings: []
-
-  googlePodMonitor:
-    # If enabled, It creates Google Managed Prometheus scraping config
-    enabled: false
-    # Set a custom namespace where to deploy PodMonitoring resource
-    # serviceMonitorNamespace: ""
-    scrapeInterval: 60s
-    # This is the default endpoint used by the prometheus plugin
-    scrapeEndpoint: /prometheus
-
   # Can be used to disable rendering controller test resources when using helm template
   testEnabled: true
 
   httpsKeyStore:
     jenkinsHttpsJksSecretName: ''
-    jenkinsHttpsJksSecretKey: "jenkins-jks-file"
-    jenkinsHttpsJksPasswordSecretName: ""
-    jenkinsHttpsJksPasswordSecretKey: "https-jks-password"
     enable: false
-    disableSecretMount: false
     httpPort: 8081
     path: "/var/jenkins_keystore"
     fileName: "keystore.jks"
@@ -623,7 +580,7 @@ controller:
 agent:
   enabled: true
   defaultsProviderTemplate: ""
-  # URL for connecting to the Jenkins controller
+  # URL for connecting to the Jenkins contoller
   jenkinsUrl:
   # connect to the specified host and port, instead of connecting directly to the Jenkins controller
   jenkinsTunnel:
@@ -631,10 +588,8 @@ agent:
   kubernetesReadTimeout: 15
   maxRequestsPerHostStr: "32"
   namespace:
-  # private registry for agent image
-  jnlpregistry:
   image: "jenkins/inbound-agent"
-  tag: "3107.v665000b_51092-15"
+  tag: "4.11.2-4"
   workingDir: "/home/jenkins/agent"
   nodeUsageMode: "NORMAL"
   customJenkinsLabels: []
@@ -642,11 +597,9 @@ agent:
   imagePullSecretName:
   componentName: "jenkins-agent"
   websocket: false
-  directConnection: false
   privileged: false
   runAsUser:
   runAsGroup:
-  hostNetworking: false
   resources:
     requests:
       cpu: "512m"
@@ -654,13 +607,6 @@ agent:
     limits:
       cpu: "512m"
       memory: "512Mi"
-  livenessProbe: {}
-#    execArgs: "cat /tmp/healthy"
-#    failureThreshold: 3
-#    initialDelaySeconds: 0
-#    periodSeconds: 10
-#    successThreshold: 1
-#    timeoutSeconds: 1
   # You may want to change this to true while testing a new image
   alwaysPullImage: false
   # Controls how agent pods are retained after the Jenkins build completes
@@ -727,12 +673,6 @@ agent:
   envVars: []
   # - name: PATH
   #   value: /usr/local/bin
-  # Mount a secret as environment variable
-  secretEnvVars: []
-  # - key: PATH
-  #   optional: false # default: false
-  #   secretKey: MY-K8S-PATH
-  #   secretName: my-k8s-secret
   nodeSelector: {}
   # Key Value selectors. Ex:
   # jenkins-agent: v1
@@ -769,23 +709,6 @@ agent:
   connectTimeout: 100
   # Annotations to apply to the pod.
   annotations: {}
-
-  # Add additional containers to the agents.
-  # Containers specified here are added to all agents. Set key empty to remove container from additional agents.
-  additionalContainers: []
-  #  - sideContainerName: dind
-  #    image: docker
-  #    tag: dind
-  #    command: dockerd-entrypoint.sh
-  #    args: ""
-  #    privileged: true
-  #    resources:
-  #      requests:
-  #        cpu: 500m
-  #        memory: 1Gi
-  #      limits:
-  #        cpu: 1
-  #        memory: 2Gi
 
   # Disable the default Jenkins Agent configuration.
   # Useful when configuring agents only with the podTemplates value, since the default podTemplate populated by values mentioned above will be excluded in the rendered template.
@@ -853,11 +776,6 @@ persistence:
   labels: {}
   accessMode: "ReadWriteOnce"
   size: "8Gi"
-  # Existing data source to clone PVC from
-  # ref: https://kubernetes.io/docs/concepts/storage/volume-pvc-datasource/
-  dataSource:
-  #   name: PVC-NAME
-  #   kind: PersistentVolumeClaim
   volumes:
   #  - name: nothing
   #    emptyDir: {}
@@ -893,7 +811,6 @@ serviceAccount:
   # The name of the service account is autogenerated by default
   name:
   annotations: {}
-  extraLabels: {}
   imagePullSecretName:
 
 
@@ -904,7 +821,6 @@ serviceAccountAgent:
   # If not set and create is true, a name is generated using the fullname template
   name:
   annotations: {}
-  extraLabels: {}
   imagePullSecretName:
 
 ## Backup cronjob configuration
@@ -932,7 +848,6 @@ backup:
   image:
     repository: "maorfr/kube-tasks"
     tag: "0.2.0"
-  imagePullSecretName:
   # Additional arguments for kube-tasks
   # Ref: https://github.com/maorfr/kube-tasks#simple-backup
   extraArgs: []
@@ -974,9 +889,6 @@ backup:
   securityContextCapabilities: {}
   #  drop:
   #    - NET_RAW
-cronJob:
-  apiVersion: batch/v1
-
 checkDeprecation: true
 
 awsSecurityGroupPolicies:
@@ -985,11 +897,3 @@ awsSecurityGroupPolicies:
     - name: ""
       securityGroupIds: []
       podSelector: {}
-
-# Here you can configure unit tests values when executing the helm unittest in the CONTRIBUTING.md
-helmtest:
-  # A testing framework for bash
-  bats:
-    # Bash Automated Testing System (BATS)
-    image: "bats/bats"
-    tag: "1.9.0"

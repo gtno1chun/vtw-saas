@@ -67,11 +67,8 @@ spec:
       {{- if quote .Values.controller.terminationGracePeriodSeconds }}
       terminationGracePeriodSeconds: {{ .Values.controller.terminationGracePeriodSeconds }}
       {{- end }}
-      {{- if .Values.controller.priorityClassName }}
+      {{- if and (.Capabilities.APIVersions.Has "scheduling.k8s.io/v1beta1") (.Values.controller.priorityClassName) }}
       priorityClassName: {{ .Values.controller.priorityClassName }}
-      {{- end }}
-      {{- if .Values.controller.shareProcessNamespace }}
-      shareProcessNamespace: true
       {{- end }}
 {{- if .Values.controller.usePodSecurityContext }}
       securityContext:
@@ -155,11 +152,6 @@ spec:
             - mountPath: {{ .Values.controller.jenkinsHome }}/init.groovy.d
               name: init-scripts
             {{- end }}
-            {{- if and .Values.controller.httpsKeyStore.enable (not .Values.controller.httpsKeyStore.disableSecretMount) }}
-            {{- $httpsJKSDirPath :=  printf "%s" .Values.controller.httpsKeyStore.path }}
-            - mountPath: {{ $httpsJKSDirPath }}
-              name: jenkins-https-keystore
-            {{- end }}
       containers:
         - name: jenkins
           image: "{{ .Values.controller.image }}:{{- include "controller.tag" . -}}"
@@ -194,10 +186,7 @@ spec:
 {{ (tpl ( toYaml .Values.controller.containerEnvFrom) .) | indent 12 }}
             {{- end }}
           env:
-            {{- if .Values.controller.containerEnv }}
-{{ (tpl ( toYaml .Values.controller.containerEnv) .) | indent 12 }}
-            {{- end }}
-            {{- if or .Values.controller.additionalSecrets .Values.controller.existingSecret .Values.controller.additionalExistingSecrets .Values.controller.adminSecret }}
+            {{- if or .Values.controller.additionalSecrets .Values.controller.additionalExistingSecrets .Values.controller.adminSecret }}
             - name: SECRETS
               value: /run/secrets/additional
             {{- end }}
@@ -215,18 +204,17 @@ spec:
               value: "{{ .Values.controller.agentListenerPort }}"
             {{- if .Values.controller.httpsKeyStore.enable }}
             - name: JENKINS_HTTPS_KEYSTORE_PASSWORD
-            {{- if not .Values.controller.httpsKeyStore.disableSecretMount }}
               valueFrom:
                 secretKeyRef:
-                  name: {{ if .Values.controller.httpsKeyStore.jenkinsHttpsJksPasswordSecretName }} {{ .Values.controller.httpsKeyStore.jenkinsHttpsJksPasswordSecretName }} {{ else if .Values.controller.httpsKeyStore.jenkinsHttpsJksSecretName }} {{ .Values.controller.httpsKeyStore.jenkinsHttpsJksSecretName }} {{ else }} {{ template "jenkins.fullname" . }}-https-jks  {{ end }}
-                  key: "{{ .Values.controller.httpsKeyStore.jenkinsHttpsJksPasswordSecretKey }}"
-            {{- else }}
-              value: {{ .Values.controller.httpsKeyStore.password }}
-            {{- end }}
+                  name: {{ if .Values.controller.httpsKeyStore.jenkinsHttpsJksSecretName }} {{ .Values.controller.httpsKeyStore.jenkinsHttpsJksSecretName }} {{ else }} {{ template "jenkins.fullname" . }}-https-jks  {{ end }}
+                  key: {{ "https-jks-password" | quote }}
             {{- end }}
 
+            {{- if .Values.controller.containerEnv }}
+{{ (tpl ( toYaml .Values.controller.containerEnv) .) | indent 12 }}
+            {{- end }}
             - name: CASC_JENKINS_CONFIG
-              value: {{ .Values.controller.sidecars.configAutoReload.folder | default (printf "%s/casc_configs" (.Values.controller.jenkinsRef)) }}{{- if .Values.controller.JCasC.configUrls }},{{ join "," .Values.controller.JCasC.configUrls }}{{- end }}
+              value: {{ .Values.controller.sidecars.configAutoReload.folder | default (printf "%s/casc_configs" (.Values.controller.jenkinsRef)) }}
           ports:
             {{- if .Values.controller.httpsKeyStore.enable }}
             - containerPort: {{.Values.controller.httpsKeyStore.httpPort}}
@@ -263,7 +251,7 @@ spec:
 {{- if .Values.persistence.mounts }}
 {{ toYaml .Values.persistence.mounts | indent 12 }}
 {{- end }}
-            {{- if and .Values.controller.httpsKeyStore.enable (not .Values.controller.httpsKeyStore.disableSecretMount) }}
+            {{- if .Values.controller.httpsKeyStore.enable }}
             {{- $httpsJKSDirPath :=  printf "%s" .Values.controller.httpsKeyStore.path }}
             - mountPath: {{ $httpsJKSDirPath }}
               name: jenkins-https-keystore
@@ -290,7 +278,7 @@ spec:
             - name: sc-config-volume
               mountPath: {{ .Values.controller.sidecars.configAutoReload.folder | default (printf "%s/casc_configs" (.Values.controller.jenkinsRef)) }}
             {{- end }}
-            {{- if or .Values.controller.additionalSecrets .Values.controller.existingSecret .Values.controller.additionalExistingSecrets .Values.controller.adminSecret }}
+            {{- if or .Values.controller.additionalSecrets .Values.controller.additionalExistingSecrets .Values.controller.adminSecret }}
             - name: jenkins-secrets
               mountPath: /run/secrets/additional
               readOnly: true
@@ -352,12 +340,8 @@ spec:
 {{- if .Values.persistence.volumes }}
 {{ tpl (toYaml .Values.persistence.volumes | indent 6) . }}
 {{- end }}
-      {{- if .Values.controller.installPlugins }}
-      {{- if .Values.controller.overwritePluginsFromImage }}
       - name: plugins
         emptyDir: {}
-      {{- end }}
-      {{- end }}
       {{- if and .Values.controller.initScripts .Values.controller.initConfigMap }}
       - name: init-scripts
         projected:
@@ -382,7 +366,7 @@ spec:
       - name: plugin-dir
         emptyDir: {}
       {{- end }}
-      {{- if or .Values.controller.additionalSecrets .Values.controller.existingSecret .Values.controller.additionalExistingSecrets .Values.controller.adminSecret }}
+      {{- if or .Values.controller.additionalSecrets .Values.controller.additionalExistingSecrets .Values.controller.adminSecret }}
       - name: jenkins-secrets
         projected:
           sources:
@@ -393,10 +377,10 @@ spec:
           {{- if .Values.controller.additionalExistingSecrets }}
           {{- range $key, $value := .Values.controller.additionalExistingSecrets }}
           - secret:
-              name: {{ tpl $value.name $ }}
+              name: {{ $value.name }}
               items:
-                - key: {{ tpl $value.keyName $ }}
-                  path: {{ tpl $value.name $ }}-{{ tpl $value.keyName $ }}
+                - key: {{ $value.keyName }}
+                  path: {{ $value.keyName }}
           {{- end }}
           {{- end }}
           {{- if .Values.controller.adminSecret }}
@@ -407,10 +391,6 @@ spec:
                   path: chart-admin-username
                 - key: {{ .Values.controller.admin.passwordKey | default "jenkins-admin-password" }}
                   path: chart-admin-password
-        {{- end }}
-        {{- if .Values.controller.existingSecret }}
-          - secret:
-              name: {{ .Values.controller.existingSecret }}
         {{- end }}
       {{- end }}
       - name: jenkins-cache
@@ -428,13 +408,12 @@ spec:
         emptyDir: {}
       - name: tmp-volume
         emptyDir: {}
-
-      {{- if and .Values.controller.httpsKeyStore.enable (not .Values.controller.httpsKeyStore.disableSecretMount) }}
+      {{- if .Values.controller.httpsKeyStore.enable }}
       - name: jenkins-https-keystore
         secret:
           secretName: {{ if .Values.controller.httpsKeyStore.jenkinsHttpsJksSecretName }} {{ .Values.controller.httpsKeyStore.jenkinsHttpsJksSecretName }} {{ else }} {{ template "jenkins.fullname" . }}-https-jks  {{ end }}
           items:
-          - key: {{ .Values.controller.httpsKeyStore.jenkinsHttpsJksSecretKey }}
+          - key: jenkins-jks-file
             path: {{ .Values.controller.httpsKeyStore.fileName }}
       {{- end }}
 

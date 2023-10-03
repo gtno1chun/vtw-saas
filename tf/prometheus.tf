@@ -10,7 +10,6 @@ resource "kubernetes_namespace" "prometheus_ns" {
   }
 }
 
-
 resource "helm_release" "prometheus" {
   depends_on = [
     kubernetes_namespace.prometheus_ns,
