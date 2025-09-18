@@ -1,0 +1,48 @@
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: git-clone-and-build-pipeline
+spec:
+  params:
+    - name: repo-url
+      type: string
+      description: The URL of the git repository to clone.
+    - name: branch-name
+      type: string
+      description: The git branch to checkout.
+      default: "main"
+    - name: maven-goal 
+      type: string
+      default: "package" 
+      description: "The RUN maven build command" 
+  workspaces:
+    - name: shared-workspace 
+    - name: shared-ssh-dir
+  tasks:
+    - name: clone-task
+      taskRef:
+        name: git-clone-ssh
+      params:
+        - name: repo-url
+          value: "$(params.repo-url)"
+        - name: branch-name
+          value: "$(params.branch-name)"
+      workspaces:
+        - name: source
+          workspace: shared-workspace 
+        - name: ssh-dir
+          workspace: shared-ssh-dir 
+    - name: build-task 
+      taskRef:  
+        name: maven-build 
+      runAfter: 
+        - clone-task 
+      params:
+        - name: maven-goal 
+          value: "$(params.maven-goal)" 
+      workspaces:
+        - name: source 
+          workspace: shared-ssh-dir 
+
+      
+        

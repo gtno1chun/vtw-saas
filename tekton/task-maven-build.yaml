@@ -1,0 +1,21 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: maven-build 
+spec:
+  params:
+    - name: maven-goal
+      type: string 
+      description: The Maven goal to run 
+      default: "package"
+  workspaces: 
+    - name: source 
+      description: The workspace containing the source code. 
+  steps:
+    - name: run-maven 
+      image: maven:3.8-openjdk-11 
+      script: | 
+        #!/bin/bash
+        cd "$(workspaces.source.path)"
+        cd vtw-saas/gs-spring-boot/complete/ 
+        mvnw "$(params.maven-goal)" 
