@@ -1,7 +1,7 @@
 apiVersion: tekton.dev/v1beta1
 kind: PipelineRun
 metadata:
-  name: petclinic-clone-mvnbuild-run
+  name: vtw-clone-mvnbuild-run
 spec:
   pipelineRef:
     name: git-clone-and-build-pipeline # SSH Task를 사용하는 파이프라인 이름으로 변경
