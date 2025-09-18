@@ -7,9 +7,9 @@ spec:
     name: git-clone-and-build-pipeline # SSH Task를 사용하는 파이프라인 이름으로 변경
   params:
     - name: repo-url
-      value: "git@github.com:gtno1chun/test.git" 
+      value: "git@github.com:gtno1chun/vtw-saas.git" 
     - name: branch-name
-      value: "master"
+      value: "main"
     - name: maven-goal 
       value: "package" 
   workspaces:

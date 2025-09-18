@@ -42,7 +42,7 @@ spec:
           value: "$(params.maven-goal)" 
       workspaces:
         - name: source 
-          workspace: shared-ssh-dir 
+          workspace: shared-workspace  
 
       
         

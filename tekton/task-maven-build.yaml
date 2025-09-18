@@ -17,5 +17,6 @@ spec:
       script: | 
         #!/bin/bash
         cd "$(workspaces.source.path)"
-        cd vtw-saas/gs-spring-boot/complete/ 
-        mvnw "$(params.maven-goal)" 
+        ls -alF 
+        #cd gs-spring-boot/complete 
+        #mvnw "$(params.maven-goal)" 
