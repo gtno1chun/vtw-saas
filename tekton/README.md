@@ -16,7 +16,7 @@ https://storage.googleapis.com/tekton-releases/pipeline/latest/release.yaml
 $ brew install tektoncd-cli
 '''
 
-3. SSH 개인 키 파일이 ~/.ssh/id_rsa에 있다고 가정
+3. SSH 개인 키 파일이 "~/.ssh/id_rsa"에 있다고 가정
 '''
 $ kubectl create secret generic ssh-key-secret --from-file=ssh-key=~/.ssh/id_rsa
 '''
