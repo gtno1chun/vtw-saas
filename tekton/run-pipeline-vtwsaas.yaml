@@ -1,17 +1,21 @@
 apiVersion: tekton.dev/v1beta1
 kind: PipelineRun
 metadata:
-  name: vtw-clone-mvnbuild-run
+  name: vtw-clone-mvnbuild-pushimage-run
 spec:
   pipelineRef:
-    name: git-clone-and-build-pipeline # SSH Task를 사용하는 파이프라인 이름으로 변경
+    name: pipeline-vtwsaas-portal 
   params:
     - name: repo-url
       value: "git@github.com:gtno1chun/vtw-saas.git" 
     - name: branch-name
       value: "main"
     - name: maven-goal 
-      value: "package" 
+      value: "package"
+    - name: image-name 
+      value: "docker.io/gtno1chun/vtwsaas" 
+    - name: image-tag 
+      value: "latest" 
   workspaces:
     - name: shared-workspace 
       volumeClaimTemplate:
@@ -24,3 +28,6 @@ spec:
     - name: shared-ssh-dir 
       secret:
         secretName: ssh-key-secret
+    - name: docker-config 
+      secret: 
+        secretName: regcred 

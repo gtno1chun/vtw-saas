@@ -36,3 +36,14 @@ mvnw 파일로 하면 안됨 이유 :
 
 해결 방법: maven-build Task 정의에서 mvn 실행 시 $(params.maven-goal)만 전달되도록 수정하고, /root/.m2는 goal이 아닌 워크스페이스(volume mount) 로 관리해야 함.
 ```
+
+
+5. docker 시크릿 생성 
+```
+# Docker Hub 계정으로 로그인 후 Secret 생성
+kubectl create secret docker-registry regcred \
+  --docker-server=https://index.docker.io/v1/ \
+  --docker-username=YOUR_DOCKERHUB_USERNAME \
+  --docker-password=YOUR_DOCKERHUB_PASSWORD \
+  --docker-email=YOUR_EMAIL
+  ```

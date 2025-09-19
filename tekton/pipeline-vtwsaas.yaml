@@ -1,7 +1,7 @@
 apiVersion: tekton.dev/v1beta1
 kind: Pipeline
 metadata:
-  name: git-clone-and-build-pipeline
+  name: pipeline-vtwsaas-portal
 spec:
   params:
     - name: repo-url
@@ -15,9 +15,16 @@ spec:
       type: string
       default: "package" 
       description: "The RUN maven build command" 
+    - name: image-name 
+      type: string 
+      description: The name of the image to build and push 
+    - name: image-tag
+      type: string 
+      default: "latest" 
   workspaces:
     - name: shared-workspace 
-    - name: shared-ssh-dir
+    - name: shared-ssh-dir 
+    - name: docker-config     # Docker 레지스트리 인증을 위한 워크스페이스
   tasks:
     - name: clone-task
       taskRef:
@@ -43,6 +50,18 @@ spec:
       workspaces:
         - name: source 
           workspace: shared-workspace 
-
-      
-        
+    - name: image-task  
+      taskRef: 
+        name: build-and-push-image 
+      runAfter:
+        - build-task 
+      params:
+        - name: image-name 
+          value: "$(params.image-name)"
+        - name: image-tag  
+          value: "$(params.image-tag)" 
+      workspaces: 
+        - name: source 
+          workspace: shared-workspace 
+        - name: docker-config 
+          workspace: docker-config 
