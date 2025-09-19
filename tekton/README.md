@@ -47,3 +47,46 @@ kubectl create secret docker-registry regcred \
   --docker-password=YOUR_DOCKERHUB_PASSWORD \
   --docker-email=YOUR_EMAIL
   ```
+
+```
+# service account 
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: tekton-sa
+secrets:
+  - name: regcred
+```
+
+```
+## 파이프라인 RUN
+~~~
+추가 
+spec:
+~~~~
+  serviceAccountName: tekton-sa 
+```
+
+```
+# 강제로 docker config.json 생성
+Task :
+~~~
+spec: 
+  steps: 
+    - name: create-docker-config
+      image: alpine:latest
+      env:
+        - name: DOCKER_CONFIG_JSON
+          valueFrom:
+            secretKeyRef:
+              name: regcred
+              key: .dockerconfigjson
+      script: |
+        #!/bin/sh
+        # writable /kaniko/.docker directory is not guaranteed to be writable
+        mkdir -p /tekton/home/.docker
+        echo "${DOCKER_CONFIG_JSON}" > /tekton/home/.docker/config.json 
+        ls -al /tekton/home/.docker
+        cat /tekton/home/.docker/config.json 
+
+```
