@@ -5,6 +5,7 @@ metadata:
 spec:
   pipelineRef:
     name: pipeline-vtwsaas-portal 
+  serviceAccountName: tekton-sa 
   params:
     - name: repo-url
       value: "git@github.com:gtno1chun/vtw-saas.git" 
