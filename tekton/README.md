@@ -90,3 +90,12 @@ spec:
         cat /tekton/home/.docker/config.json 
 
 ```
+
+
+6. webhook secret 
+```
+kubectl create secret generic github-webhook-secret \
+  --from-literal=secretToken="MY_SUPER_SECRET" \
+  -n default
+```
+
