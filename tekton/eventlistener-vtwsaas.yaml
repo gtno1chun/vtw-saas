@@ -33,14 +33,17 @@ spec:
         - ref: github-binding 
       template:
         ref: github-template 
-      interceptors: 
-        - ref: 
-            name: github 
-          params: 
-            - name: secretRef 
-              value: 
-                secretName: github-webhook-secret 
-                secretKey: secretToken 
-            - name: eventTypes 
-              value: 
-                - push 
+
+      # 로컬 테스트 일 경우 아래 임시 주석
+      interceptors: []
+      # interceptors: 
+      #   - ref: 
+      #       name: github 
+      #     params: 
+      #       - name: secretRef 
+      #         value: 
+      #           secretName: github-webhook-secret 
+      #           secretKey: secretToken 
+      #       - name: eventTypes 
+      #         value: 
+      #           - push 

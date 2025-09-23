@@ -99,5 +99,52 @@ kubectl create secret generic github-webhook-secret \
   -n default
 ```
 
-
+7. 로컬환경 테스트 
+```
+# payload.json
+{
+  "ref": "refs/heads/main",
+  "after": "0000000000000000000000000000000000000000",
+  "repository": {
+    "name": "vtw-saas",
+    "full_name": "gtno1chun/vtw-saas",
+    "url": "https://github.com/gtno1chun/vtw-saas"
+  },
+  "pusher": {
+    "name": "test-user"
+  }
+}
+```
+```
+$ kubectl port-forward svc/el-github-listener 8080:8080 
+```
+```
+curl -X POST http://localhost:8080/ \
+-H "Content-Type: application/json" \
+-H "X-GitHub-Event: push" \
+-d @payload.json
+```
+```
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: tekton-triggers-pipelinerun
+rules:
+  - apiGroups: ["tekton.dev"]
+    resources: ["pipelineruns", "taskruns"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: tekton-triggers-pipelinerun-binding
+subjects:
+  - kind: ServiceAccount
+    name: tekton-triggers-sa
+    namespace: default
+roleRef:
+  kind: ClusterRole
+  name: tekton-triggers-pipelinerun
+  apiGroup: rbac.authorization.k8s.io
+```
 
