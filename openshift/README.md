@@ -56,6 +56,8 @@ openshift URL:   https://console-openshift-console.apps-crc.testing
 Log in as administrator:
   Username: kubeadmin
   Password: nIfnZ-qYjwv-txv6e-V9TDr
+  ### 패스워드 확인 
+  crc console --credentials
 
 Log in as user:
   Username: developer
