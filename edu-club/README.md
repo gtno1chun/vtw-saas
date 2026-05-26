@@ -1,8 +1,11 @@
 # 자동화를 이용한 prometheus 모니터링 도구 설치 
 
-
-
+참조사이트: 
 ```
+https://opentofu.org/docs/v1.12/
+https://minikube.sigs.k8s.io/docs/start/?arch=%2Flinux%2Fx86-64%2Fstable%2Fbinary+download
+```
+
 ### CLI 명령어 
 helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
 helm install my-kube-prometheus-stack prometheus-community/kube-prometheus-stack --version 85.3.3
